@@ -27,11 +27,18 @@ if (!process.env.JWT_SECRET) {
 //   allowedHeaders: ['Content-Type', 'Authorization'],
 // }));
 // app.use(express.json());
+// app.use(cors({
+//   origin: ['https://adchain-omega.vercel.app', 'http://localhost:5173'],
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+// }));
 app.use(cors({
-  origin: ['https://adchain-omega.vercel.app', 'http://localhost:5173'],
-  credentials: true,
+  origin: 'https://adchain-omega.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+
 
 // Connect to MongoDB with retry logic
 const connectWithRetry = async (retries = 5, delay = 5000) => {
