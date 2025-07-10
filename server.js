@@ -23,7 +23,7 @@ if (!process.env.JWT_SECRET) {
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://adchain-omega.vercel.app/'],
+  origin: 'https://adchain-omega.vercel.app/',
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
