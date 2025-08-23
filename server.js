@@ -41,30 +41,30 @@ app.use(cors({
 
 
 // Connect to MongoDB with retry logic
-// const connectWithRetry = async (retries = 5, delay = 5000) => {
-//   for (let i = 0; i < retries; i++) {
-//     try {
-//       await mongoose.connect(process.env.MONGO_URI, {
-//         serverSelectionTimeoutMS: 5000,
-//         maxPoolSize: 10,
-//       });
-//       console.log('MongoDB connected');
-//       return;
-//     } catch (err) {
-//       console.error(`MongoDB connection attempt ${i + 1} failed:`, err.message);
-//       if (i === retries - 1) {
-//         console.error('MongoDB connection failed after all retries. Exiting...');
-//         process.exit(1);
-//       }
-//       console.log(`Retrying in ${delay / 1000} seconds...`);
-//       await new Promise((resolve) => setTimeout(resolve, delay));
-//     }
-//   }
-// };
+const connectWithRetry = async (retries = 5, delay = 5000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000,
+        maxPoolSize: 10,
+      });
+      console.log('MongoDB connected');
+      return;
+    } catch (err) {
+      console.error(`MongoDB connection attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) {
+        console.error('MongoDB connection failed after all retries. Exiting...');
+        process.exit(1);
+      }
+      console.log(`Retrying in ${delay / 1000} seconds...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+};
 
-// // Initiate MongoDB connection
-// connectWithRetry();
-mongoose.connect("mongodb+srv://avinashkumarsinghst:GwFv3uc6WvpdBpuG@cluster0.hgnbdzn.mongodb.net/adsense?retryWrites=true&w=majority")
+// Initiate MongoDB connection
+connectWithRetry();
+
 
 // Mount Routes
 app.use('/api/users', authRoutes);
