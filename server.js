@@ -104,17 +104,27 @@ if (!process.env.JWT_SECRET) {
   console.error('Error: JWT_SECRET is not defined in the .env file');
   process.exit(1);
 }
-
-// Middleware
 app.use(cors({
   origin: [
-    'https://adchain-omega.vercel.app', // ✅ deployed frontend
-    'http://localhost:3000'             // ✅ local dev
+    'https://adchain-omega.vercel.app',                   // old frontend
+    'https://adchain-2n6xvg8jw-avir0s-projects.vercel.app', // new frontend
+    'http://localhost:3000'                               // local dev
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Middleware
+// app.use(cors({
+//   origin: [
+//     'https://adchain-omega.vercel.app', // ✅ deployed frontend
+//     'http://localhost:3000'             // ✅ local dev
+//   ],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization'],
+//   credentials: true
+// }));
 
 app.use(express.json());
 
