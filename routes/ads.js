@@ -699,6 +699,243 @@
 // export default router;
 
 
+// import express from 'express';
+// import jwt from 'jsonwebtoken';
+// import Ad from '../models/Ad.js';
+// import User from '../models/User.js';
+
+// const router = express.Router();
+
+// // ===============================
+// // Helper: Simple AI Score
+// // ===============================
+// function calculateAIScore(title, desc = "") {
+//   let score = 50;
+//   if (desc.toLowerCase().includes(title.toLowerCase())) score += 20;
+//   if (desc.length > 80) score += 15;
+//   if (desc.includes("#")) score += 10;
+//   return Math.min(score, 100);
+// }
+
+// // ===============================
+// // Create Ad (Company only)
+// // ===============================
+// router.post('/', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.userId);
+
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     if (user.role !== 'company') {
+//       return res.status(403).json({ message: 'Only companies can create ads' });
+//     }
+
+//     const ad = new Ad({
+//       ...req.body,
+//       companyId: user._id,
+//     });
+
+//     await ad.save();
+//     res.status(201).json(ad);
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Get Ads for Influencers
+// // ===============================
+// router.get('/', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.userId);
+
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     if (user.role !== 'influencer') {
+//       return res.status(403).json({ message: 'Only influencers can view ads' });
+//     }
+
+//     const ads = await Ad.find({
+//       category: { $in: user.categories },
+//       status: 'pending',
+//     }).populate('companyId', 'name');
+
+//     res.json(ads);
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Get Ads Created by Company
+// // ===============================
+// router.get('/my-ads', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.userId);
+
+//     if (!user) return res.status(404).json({ message: 'User not found' });
+//     if (user.role !== 'company') {
+//       return res.status(403).json({ message: 'Only companies can view their ads' });
+//     }
+
+//     const ads = await Ad.find({ companyId: user._id })
+//       .sort({ createdAt: -1 })
+//       .populate('influencers.influencer', 'name email');
+
+//     res.json(ads);
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Accept Ad (Multi influencer)
+// // ===============================
+// router.post('/:adId/accept', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const influencer = await User.findById(decoded.userId);
+
+//     if (!influencer || influencer.role !== 'influencer') {
+//       return res.status(403).json({ message: 'Not authorized' });
+//     }
+
+//     const ad = await Ad.findById(req.params.adId);
+//     if (!ad) return res.status(404).json({ message: 'Ad not found' });
+
+//     const already = ad.influencers?.find(
+//       (i) => i.influencer?.toString() === influencer._id.toString()
+//     );
+
+//     if (already) {
+//       return res.status(400).json({ message: 'Already accepted' });
+//     }
+
+//     ad.influencers.push({
+//       influencer: influencer._id,
+//       acceptedAt: new Date(),
+//     });
+
+//     ad.status = 'accepted';
+//     await ad.save();
+
+//     res.json({ message: 'Ad accepted successfully' });
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Submit Proof (per influencer)
+// // ===============================
+// router.post('/:adId/submit-proof', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const influencer = await User.findById(decoded.userId);
+
+//     const { link, description, likes, comments, views } = req.body;
+
+//     const ad = await Ad.findById(req.params.adId);
+//     if (!ad) return res.status(404).json({ message: 'Ad not found' });
+
+//     const entry = ad.influencers.find(
+//       (i) => i.influencer?.toString() === influencer._id.toString()
+//     );
+
+//     if (!entry) {
+//       return res.status(403).json({ message: 'You must accept ad first' });
+//     }
+
+//     entry.proof = { link, description, submittedAt: new Date() };
+//     entry.metrics = { likes, comments, views };
+//     entry.aiScore = calculateAIScore(ad.title, description);
+
+//     await ad.save();
+
+//     res.json({ message: 'Proof submitted successfully' });
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Mark Payment Paid
+// // ===============================
+// router.patch('/:adId/pay/:influencerId', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.userId);
+
+//     if (!user || user.role !== 'company') {
+//       return res.status(403).json({ message: 'Not authorized' });
+//     }
+
+//     const ad = await Ad.findById(req.params.adId);
+
+//     const entry = ad.influencers.find(
+//       (i) => i.influencer?.toString() === req.params.influencerId
+//     );
+
+//     if (!entry) return res.status(404).json({ message: 'Influencer not found' });
+
+//     entry.paymentStatus = 'paid';
+//     await ad.save();
+
+//     res.json({ message: 'Payment marked as paid' });
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// // ===============================
+// // Delete Ad
+// // ===============================
+// router.delete('/:id', async (req, res) => {
+//   try {
+//     const token = req.headers.authorization?.split(' ')[1];
+//     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const user = await User.findById(decoded.userId);
+
+//     if (!user || user.role !== 'company') {
+//       return res.status(403).json({ message: 'Not authorized' });
+//     }
+
+//     const ad = await Ad.findOneAndDelete({
+//       _id: req.params.id,
+//       companyId: user._id,
+//     });
+
+//     if (!ad) return res.status(404).json({ message: 'Ad not found' });
+
+//     res.json({ message: 'Ad deleted successfully' });
+//   } catch (err) {
+//     res.status(500).json({ message: 'Server error', error: err.message });
+//   }
+// });
+
+// export default router;
+
+
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import Ad from '../models/Ad.js';
@@ -718,7 +955,7 @@ function calculateAIScore(title, desc = "") {
 }
 
 // ===============================
-// Create Ad (Company only)
+// Create Ad (Company)
 // ===============================
 router.post('/', async (req, res) => {
   try {
@@ -728,9 +965,8 @@ router.post('/', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    if (user.role !== 'company') {
-      return res.status(403).json({ message: 'Only companies can create ads' });
+    if (!user || user.role !== 'company') {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     const ad = new Ad({
@@ -741,12 +977,12 @@ router.post('/', async (req, res) => {
     await ad.save();
     res.status(201).json(ad);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 // ===============================
-// Get Ads for Influencers
+// Feed for Influencers
 // ===============================
 router.get('/', async (req, res) => {
   try {
@@ -756,24 +992,22 @@ router.get('/', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    if (user.role !== 'influencer') {
-      return res.status(403).json({ message: 'Only influencers can view ads' });
+    if (!user || user.role !== 'influencer') {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     const ads = await Ad.find({
       category: { $in: user.categories },
-      status: 'pending',
     }).populate('companyId', 'name');
 
     res.json(ads);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 // ===============================
-// Get Ads Created by Company
+// Company: My Ads
 // ===============================
 router.get('/my-ads', async (req, res) => {
   try {
@@ -783,9 +1017,8 @@ router.get('/my-ads', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    if (user.role !== 'company') {
-      return res.status(403).json({ message: 'Only companies can view their ads' });
+    if (!user || user.role !== 'company') {
+      return res.status(403).json({ message: 'Not authorized' });
     }
 
     const ads = await Ad.find({ companyId: user._id })
@@ -794,12 +1027,39 @@ router.get('/my-ads', async (req, res) => {
 
     res.json(ads);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 // ===============================
-// Accept Ad (Multi influencer)
+// Influencer: Accepted Ads
+// ===============================
+router.get('/accepted', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.role !== 'influencer') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const ads = await Ad.find({
+      "influencers.influencer": user._id,
+    })
+      .populate('companyId', 'name')
+      .populate('influencers.influencer', 'name email');
+
+    res.json(ads);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ===============================
+// Accept Ad (multi influencer)
 // ===============================
 router.post('/:adId/accept', async (req, res) => {
   try {
@@ -816,7 +1076,7 @@ router.post('/:adId/accept', async (req, res) => {
     const ad = await Ad.findById(req.params.adId);
     if (!ad) return res.status(404).json({ message: 'Ad not found' });
 
-    const already = ad.influencers?.find(
+    const already = ad.influencers.find(
       (i) => i.influencer?.toString() === influencer._id.toString()
     );
 
@@ -834,7 +1094,7 @@ router.post('/:adId/accept', async (req, res) => {
 
     res.json({ message: 'Ad accepted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -862,7 +1122,12 @@ router.post('/:adId/submit-proof', async (req, res) => {
       return res.status(403).json({ message: 'You must accept ad first' });
     }
 
-    entry.proof = { link, description, submittedAt: new Date() };
+    entry.proof = {
+      link,
+      description,
+      submittedAt: new Date(),
+    };
+
     entry.metrics = { likes, comments, views };
     entry.aiScore = calculateAIScore(ad.title, description);
 
@@ -870,12 +1135,12 @@ router.post('/:adId/submit-proof', async (req, res) => {
 
     res.json({ message: 'Proof submitted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 // ===============================
-// Mark Payment Paid
+// Mark payment paid (company)
 // ===============================
 router.patch('/:adId/pay/:influencerId', async (req, res) => {
   try {
@@ -888,7 +1153,6 @@ router.patch('/:adId/pay/:influencerId', async (req, res) => {
     }
 
     const ad = await Ad.findById(req.params.adId);
-
     const entry = ad.influencers.find(
       (i) => i.influencer?.toString() === req.params.influencerId
     );
@@ -898,9 +1162,9 @@ router.patch('/:adId/pay/:influencerId', async (req, res) => {
     entry.paymentStatus = 'paid';
     await ad.save();
 
-    res.json({ message: 'Payment marked as paid' });
+    res.json({ message: 'Payment updated' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -910,8 +1174,6 @@ router.patch('/:adId/pay/:influencerId', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
 
@@ -928,9 +1190,10 @@ router.delete('/:id', async (req, res) => {
 
     res.json({ message: 'Ad deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
 export default router;
+
 
