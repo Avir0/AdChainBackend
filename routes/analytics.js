@@ -27,7 +27,7 @@ router.get("/company", async (req, res) => {
       0
     );
 
-    const revenue = acceptedAds * 500; // demo logic
+    const revenue = acceptedAds * 500;
 
     const status = [
       { name: "Accepted", value: acceptedAds },
@@ -35,10 +35,11 @@ router.get("/company", async (req, res) => {
       { name: "Rejected", value: ads.filter(a => a.status === "rejected").length },
     ];
 
-    const growth = ads.map((_, i) => ({
-      month: `C${i + 1}`,
-      count: i + 1,
-    }));
+    const growth = [
+      { month: "Jan", count: 1 },
+      { month: "Feb", count: 2 },
+      { month: "Mar", count: totalAds },
+    ];
 
     res.json({
       totalAds,
@@ -49,7 +50,7 @@ router.get("/company", async (req, res) => {
       growth,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
